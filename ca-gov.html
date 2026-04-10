@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" data-look="riso" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>California Governor — Projected Trend</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#111827; --dim:#374151; --muted:#6b7280; --faint:#9ca3af;
+  --card-bg:#fff; --pg-bg:#f3f4f6;
+  --grad-1:#eef2ff; --grad-2:#fff1f2;
+  --rule:#e5e7eb;
+  --blue:#2563eb; --blue-dark:#1e40af; --blue-soft:#dbeafe;
+  --red:#dc2626; --red-dark:#991b1b; --red-soft:#fee2e2;
+  --green:#10b981; --purple:#7c3aed;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+}
+html[data-theme="dark"]{
+  --ink:#f0f0f0; --dim:#d0d0d0; --muted:#a0a0a0; --faint:#8a8a8a;
+  --card-bg:#141414; --pg-bg:#0a0a0a;
+  --grad-1:rgba(79,70,229,0.12); --grad-2:rgba(220,38,38,0.08);
+  --rule:#333;
+  --blue:#60a5fa; --blue-dark:#93c5fd; --blue-soft:#1e3a8a;
+  --red:#f87171; --red-dark:#fca5a5; --red-soft:#7f1d1d;
+  --green:#34d399; --purple:#a78bfa;
+}
+
+html{
+  background:var(--pg-bg);
+  background-image:
+    radial-gradient(circle at 10% 10%,var(--grad-1),transparent 40%),
+    radial-gradient(circle at 90% 20%,var(--grad-2),transparent 40%);
+  background-attachment:fixed;
+  min-height:100vh;
+}
+body{
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  color:var(--ink);
+  background:transparent;
+  padding:16px 16px 20px;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:12px;height:100%;width:100%}
+
+/* ─── Header ─── */
+.header-row{display:flex;gap:12px;align-items:stretch}
+.title-card{flex:1;display:flex;align-items:center;gap:14px;padding:10px 16px}
+.display-mark{font-size:28px;font-weight:900;letter-spacing:-0.04em;line-height:1;font-family:var(--sans)}
+.display-mark .sep{color:var(--blue)}
+.title-meta{border-left:1px solid var(--ink);padding-left:14px;flex:1}
+.title-lbl{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink);line-height:1.2}
+.title-sub{font-size:10px;font-weight:500;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.ctrl-card{display:flex;align-items:center;gap:8px;padding:8px 12px}
+
+/* ─── Riso box shared ─── */
+.box{
+  background:var(--card-bg);
+  border:1px solid var(--ink);
+  box-shadow:4px 4px 0 0 var(--ink);
+}
+
+/* ─── Toggles ─── */
+.toggle{
+  font-family:var(--sans);font-size:11px;font-weight:800;
+  padding:5px 11px;cursor:pointer;
+  background:var(--card-bg);color:var(--ink);
+  border:1px solid var(--ink);
+  box-shadow:2px 2px 0 0 var(--ink);
+  letter-spacing:0.02em;transition:all .12s ease;
+}
+.toggle.active, .toggle:hover{background:var(--ink);color:var(--card-bg)}
+.toggle-sep{width:1px;background:var(--ink);align-self:stretch}
+
+/* ─── Scenario row ─── */
+.scenario-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px}
+.scenario-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-family:var(--mono)}
+.scenario-desc{font-size:13px;font-weight:600;color:var(--ink);margin-top:2px}
+.scenario-pills{display:flex;gap:0}
+.scenario-pill{
+  font-family:var(--sans);font-size:11px;font-weight:800;
+  padding:7px 14px;cursor:pointer;
+  background:var(--card-bg);color:var(--muted);
+  border:1px solid var(--ink);border-right:none;
+  letter-spacing:0.02em;
+}
+.scenario-pill:last-child{border-right:1px solid var(--ink)}
+.scenario-pill.on{background:var(--ink);color:var(--card-bg)}
+
+/* ─── Main grid: chart left, sims right ─── */
+.main-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;flex:1;min-height:0}
+
+.chart-card{display:flex;flex-direction:column;padding:12px 14px;min-height:0}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
+.chart-title{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-0.01em}
+.legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin-bottom:8px}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:11px;height:11px;border:1.5px solid var(--ink);box-shadow:1px 1px 0 0 var(--ink)}
+.legend-text{font-size:9px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:0.04em}
+.chart-wrap{
+  position:relative;flex:1;min-height:260px;width:100%;
+  padding:8px 6px 2px;
+  border:1px solid var(--ink);
+  background:var(--card-bg);
+}
+.chart-card{gap:8px}
+.chart-title{
+  font-size:14px;font-weight:900;letter-spacing:-0.02em;
+  text-transform:uppercase;font-family:var(--mono);
+}
+
+.sims-col{display:flex;flex-direction:column;gap:12px;min-height:0}
+.sim-card{padding:10px 14px;display:flex;flex-direction:column;flex:1;min-height:0}
+.sim-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.sim-title{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:-0.01em}
+.sim-count{font-size:9px;font-weight:600;color:var(--muted);font-family:var(--mono)}
+.summary-pills{display:flex;gap:6px}
+.summary-pill{padding:5px 10px;text-align:center;border:1px solid var(--ink);background:var(--card-bg)}
+.summary-pill .lbl{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono)}
+.summary-pill .val{font-size:14px;font-weight:900;font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-0.02em;margin-top:1px}
+
+/* Matchup bars */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
+.bar-names{min-width:120px;display:flex;align-items:center;gap:4px;font-weight:700;color:var(--ink);font-size:10px}
+.bar-names .v{font-size:9px;font-weight:500;color:var(--faint)}
+.bar-track{flex:1;height:16px;background:var(--card-bg);border:1px solid var(--ink);position:relative;overflow:hidden}
+.bar-fill{height:100%;display:flex;align-items:center;padding-left:6px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.bar-pct{font-size:9px;font-weight:800;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.bar-pct-out{position:absolute;top:50%;transform:translateY(-50%);font-size:9px;font-weight:800;color:var(--dim);font-family:var(--mono)}
+.dot{width:7px;height:7px;border:1px solid var(--ink);display:inline-block}
+
+/* Top-2 grid */
+.top2-head{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-family:var(--mono);margin:6px 0 6px;padding-top:8px;border-top:1px solid var(--ink)}
+.top2-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.top2-card{padding:6px 4px;text-align:center;border:1px solid var(--ink);background:var(--card-bg)}
+.top2-card .lbl{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;font-family:var(--mono)}
+.top2-card .num{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;font-family:var(--mono);margin-top:1px}
+
+.foot{font-size:9px;font-weight:500;color:var(--faint);text-align:center;margin-top:6px;font-family:var(--mono);letter-spacing:0.02em}
+
+
+/* ─── Legacy mode (glassmorphic) ─── */
+html[data-look="legacy"] .box{
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.6);
+  box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);
+  border-radius:16px;
+}
+html[data-theme="dark"][data-look="legacy"] .box{
+  background:rgba(31,41,55,0.85);
+  border:1px solid rgba(55,65,81,0.6);
+  box-shadow:0 4px 6px -1px rgba(0,0,0,0.3);
+}
+html[data-look="legacy"] .toggle,
+html[data-look="legacy"] .scenario-pill,
+html[data-look="legacy"] .summary-pill,
+html[data-look="legacy"] .top2-card,
+html[data-look="legacy"] .bar-track,
+html[data-look="legacy"] .bar-fill,
+html[data-look="legacy"] .legend-dot,
+html[data-look="legacy"] .dot{
+  border-radius:8px;
+}
+html[data-look="legacy"] .toggle,
+html[data-look="legacy"] .scenario-pill{
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+  border-radius:9999px;
+}
+html[data-look="legacy"] .legend-dot,
+html[data-look="legacy"] .dot{
+  border-radius:9999px;border:none;
+}
+html[data-look="legacy"] .bar-track{
+  background:var(--rule);border:none;
+}
+html[data-look="legacy"] .title-meta{
+  border-left-color:var(--rule);
+}
+html[data-look="legacy"] .top2-head{
+  border-top-color:var(--rule);
+}
+/* Active state for both toggles */
+#lookToggle.active,#themeToggle.active{background:var(--ink);color:var(--card-bg)}
+
+@media (max-width:900px){
+  body{
+    padding:12px 10px 20px;
+    height:auto;min-height:0;overflow:auto;
+    background-image:none !important;
+    background-attachment:scroll;
+  }
+  .wrap{height:auto}
+  .main-grid{grid-template-columns:1fr;gap:10px;flex:none}
+  .chart-wrap{min-height:240px}
+  .top2-grid{grid-template-columns:repeat(5,1fr);gap:4px}
+  .top2-card .num{font-size:12px}
+  .display-mark{font-size:22px}
+  .title-card{padding:8px 12px;gap:10px}
+  .title-meta{padding-left:10px}
+  .title-sub{font-size:9px}
+  .header-row{flex-direction:column;gap:8px}
+  .bar-names{min-width:100px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header-row">
+    <div class="title-card box">
+      <div class="display-mark">CA<span class="sep">/</span>GOV</div>
+      <div class="title-meta">
+        <div class="title-lbl">California · Governor 2026</div>
+        <div class="title-sub">PROJECTED TREND · JUN '26 PRIMARY · N=10000</div>
+      </div>
+    </div>
+    <div class="ctrl-card box">
+      <button class="toggle" id="lookToggle" title="Toggle look">%</button>
+      <button class="toggle" id="themeToggle" title="Toggle theme">☀</button>
+    </div>
+  </div>
+
+  <!-- SCENARIO -->
+  <div class="scenario-card box">
+    <div>
+      <div class="scenario-label">Scenario</div>
+      <div class="scenario-desc" id="scenarioDesc">Baseline — Trump endorsed Hilton</div>
+    </div>
+    <div class="scenario-pills">
+      <button class="scenario-pill on" id="pillBase" onclick="setScenario('base')">Baseline</button>
+      <button class="scenario-pill" id="pillDrop" onclick="setScenario('drop')">Swalwell drops out</button>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: Chart -->
+    <div class="chart-card box">
+      <div class="chart-head">
+        <div class="chart-title">Polling average + projection</div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+
+    <!-- RIGHT: Sims -->
+    <div class="sims-col">
+      <div class="sim-card box">
+        <div class="sim-head-row">
+          <div>
+            <div class="sim-title">Top-2 matchups</div>
+            <div class="sim-count">10,000 sims</div>
+          </div>
+          <div class="summary-pills" id="summaryPills"></div>
+        </div>
+        <div id="matchupBars"></div>
+        <div class="top2-head">Top-2 probability</div>
+        <div class="top2-grid" id="top2Grid"></div>
+        <div class="top2-head">Win probability (nominee)</div>
+        <div class="top2-grid" id="winGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Solid = weighted polling average · Dashed = projected trend · Trump endorsement is baked in</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ────────── DATA ────────── */
+const COLORS_LIGHT={Swalwell:"#2563eb",Porter:"#10b981",Steyer:"#7c3aed",Hilton:"#dc2626",Bianco:"#f97316","Other Ds":"#93c5fd",Other:"#9ca3af"};
+const COLORS_DARK={Swalwell:"#60a5fa",Porter:"#34d399",Steyer:"#a78bfa",Hilton:"#f87171",Bianco:"#fb923c","Other Ds":"#bfdbfe",Other:"#a8a29e"};
+function getColors(){return document.documentElement.getAttribute("data-theme")==="dark"?COLORS_DARK:COLORS_LIGHT}
+const COLORS=new Proxy({},{get:(_,k)=>getColors()[k]});
+const LABELS={Swalwell:"Swalwell (D)",Porter:"Porter (D)",Steyer:"Steyer (D)",Hilton:"Hilton (R)",Bianco:"Bianco (R)","Other Ds":"Minor Ds",Other:"Other"};
+const ALL=["Swalwell","Porter","Steyer","Hilton","Bianco","Other Ds","Other"];
+const MAIN5=["Swalwell","Porter","Steyer","Hilton","Bianco"];
+const MAIN_NO_SW=["Porter","Steyer","Hilton","Bianco"];
+const MONTHS_A=["Dec 25","Jan–Feb","Feb 26","Mar 26"];
+const MONTHS_P=["Apr 26","May 26","Jun 26"];
+const ACTUAL=[
+  {Swalwell:25.5,Porter:22.6,Steyer:4.5,Hilton:14.0,Bianco:14.6,"Other Ds":14.2,Other:4.4},
+  {Swalwell:21.7,Porter:20.5,Steyer:16.0,Hilton:14.5,Bianco:14.9,"Other Ds":10.3,Other:2.0},
+  {Swalwell:21.4,Porter:18.2,Steyer:18.6,Hilton:16.7,Bianco:12.5,"Other Ds":10.0,Other:2.7},
+  {Swalwell:24.0,Porter:16.5,Steyer:19.5,Hilton:16.3,Bianco:13.1,"Other Ds":8.7,Other:1.9},
+];
+const SW=0.40, TC=0.35, NS=10000, EM=0.10;
+/* Swalwell drops: Porter .45, Steyer .30, Other Ds .18, Other .07 */
+const DROP_SHARES={Porter:0.45,Steyer:0.30,"Other Ds":0.18,Other:0.07};
+
+function proj(scenario){
+  const jan=ACTUAL[1], mar=ACTUAL[3], sl={};
+  ALL.forEach(c=>{sl[c]=((mar[c]-jan[c])/2)*SW});
+  return [0,1,2].map(i=>{
+    const r={};
+    ALL.forEach(c=>{r[c]=Math.max(0,+(mar[c]+sl[c]*(i+1)).toFixed(1))});
+    // Trump endorsement (always on)
+    const b=r.Bianco;
+    r.Hilton=+(r.Hilton+b*TC).toFixed(1);
+    r.Bianco=+(b*(1-TC)).toFixed(1);
+    // Swalwell drops starting from May (i>=1 ~ May26)
+    if(scenario==="drop" && i>=1){
+      const sw=r.Swalwell;
+      // Fade Swalwell out progressively (linear): by May half gone, by June fully gone
+      const fade=i===1?0.5:1.0;
+      const redistributed=sw*fade;
+      r.Swalwell=+(sw-redistributed).toFixed(1);
+      Object.entries(DROP_SHARES).forEach(([k,share])=>{
+        r[k]=+(r[k]+redistributed*share).toFixed(1);
+      });
+    }
+    return r;
+  });
+}
+
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+
+function simulate(scenario){
+  const p=proj(scenario), base=p[2];
+  const pool = (scenario==="drop" && base.Swalwell < 1) ? MAIN_NO_SW : MAIN5;
+  const matchups={}, wins={};
+  pool.forEach(c=>{wins[c]=0});
+  for(let i=0;i<NS;i++){
+    const d={};
+    pool.forEach(c=>{d[c]=Math.max(.1, base[c]+gauss()*base[c]*EM)});
+    const s=pool.map(c=>({c,v:d[c]})).sort((a,b)=>b.v-a.v);
+    const pair=[s[0].c,s[1].c].sort().join(" v ");
+    matchups[pair]=(matchups[pair]||0)+1;
+    wins[s[0].c]++; wins[s[1].c]++;
+  }
+  const results=Object.entries(matchups).map(([k,v])=>({matchup:k,count:v,pct:v/NS*100})).sort((a,b)=>b.count-a.count);
+  const topWins=Object.entries(wins).map(([c,v])=>({c,pct:v/NS*100})).sort((a,b)=>b.pct-a.pct);
+  return{results,topWins,base,pool};
+}
+
+/* ────────── LEGEND ────────── */
+const legEl=document.getElementById("legend");
+function buildLegend(scenario){
+  legEl.innerHTML="";
+  const show=(scenario==="drop"?ALL.filter(c=>c!=="Swalwell"):ALL);
+  show.forEach(c=>{
+    const d=document.createElement("div");d.className="legend-item";
+    d.innerHTML=`<span class="legend-dot" style="background:${COLORS[c]}"></span><span class="legend-text">${LABELS[c]}</span>`;
+    legEl.appendChild(d);
+  });
+}
+
+let chart=null, scenario="base";
+
+/* ────────── CHART ────────── */
+function buildChart(){
+  const p=proj(scenario);
+  const labels=[...MONTHS_A,...MONTHS_P];
+  const ink=getComputedStyle(document.documentElement).getPropertyValue("--ink").trim()||"#111827";
+  const muted=getComputedStyle(document.documentElement).getPropertyValue("--muted").trim()||"#6b7280";
+  const rule=getComputedStyle(document.documentElement).getPropertyValue("--rule").trim()||"#e5e7eb";
+  const datasets=[];
+
+  ALL.forEach(c=>{
+    const isMinor=c==="Other Ds"||c==="Other"||c==="Bianco";
+    const col=COLORS[c];
+    const actualData=ACTUAL.map(a=>a[c]);
+    const projData=[null,null,null,ACTUAL[3][c],...p.map(x=>x[c])];
+    datasets.push({
+      label:LABELS[c]+" (actual)",data:actualData,
+      borderColor:col,backgroundColor:col,
+      borderWidth:isMinor?2:3.5,
+      pointStyle:"rect",
+      pointRadius:isMinor?4:5,
+      pointHoverRadius:7,
+      pointBorderColor:ink,pointBorderWidth:1.5,
+      tension:0,stepped:false,spanGaps:false
+    });
+    datasets.push({
+      label:LABELS[c]+" (proj)",data:projData,
+      borderColor:col,backgroundColor:col,
+      borderWidth:isMinor?1.5:2.5,
+      borderDash:[6,4],
+      pointStyle:"rect",
+      pointRadius:isMinor?3:4,pointHoverRadius:6,
+      pointBorderColor:ink,pointBorderWidth:1.5,
+      tension:0,spanGaps:true,
+    });
+  });
+
+  const ctx=document.getElementById("trendChart");
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:getComputedStyle(document.documentElement).getPropertyValue("--card-bg").trim()||"#fff",
+          titleColor:ink, bodyColor:ink,
+          borderColor:ink, borderWidth:1, cornerRadius:0, padding:10,
+          displayColors:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          usePointStyle:true,
+          titleFont:{size:12,weight:800,family:"'Inter',sans-serif"},
+          bodyFont:{size:11,weight:700,family:"'Inter',sans-serif"},
+          caretSize:0,
+          callbacks:{
+            label:ctx=>{
+              const lbl=ctx.dataset.label.replace(" (actual)","").replace(" (proj)","");
+              return `${lbl}: ${ctx.parsed.y.toFixed(1)}%`;
+            }
+          },
+          filter:item=>item.raw!==null
+        }
+      },
+      scales:{
+        y:{
+          min:0,max:36,
+          grid:{color:ink+"33",lineWidth:1,drawTicks:true,tickLength:4,tickColor:ink},
+          border:{display:true,color:ink,width:2},
+          ticks:{color:ink,font:{size:10,family:"ui-monospace,Menlo,monospace",weight:"800"},callback:v=>v+"%",padding:6,stepSize:5}
+        },
+        x:{
+          grid:{color:ink+"14",lineWidth:1,drawTicks:true,tickLength:4,tickColor:ink},
+          border:{display:true,color:ink,width:2},
+          ticks:{color:ink,font:{size:10,family:"ui-monospace,Menlo,monospace",weight:"800"},autoSkip:false,padding:6}
+        }
+      },
+      interaction:{intersect:false,mode:"index"},
+      elements:{point:{borderWidth:0}}
+    },
+    plugins:[{
+      id:"refLine",
+      afterDraw(ch){
+        const meta=ch.getDatasetMeta(0);
+        if(meta.data.length<4)return;
+        const x=meta.data[3].x;
+        const ctx2=ch.ctx, area=ch.chartArea;
+        ctx2.save();ctx2.beginPath();
+        ctx2.strokeStyle=ink; ctx2.globalAlpha=0.5; ctx2.lineWidth=1.5;
+        ctx2.moveTo(x,area.top); ctx2.lineTo(x,area.bottom);
+        ctx2.stroke();
+        // "PROJ" label on ref line
+        ctx2.globalAlpha=0.55;
+        ctx2.fillStyle=ink;
+        ctx2.font='800 9px ui-monospace,Menlo,monospace';
+        ctx2.textAlign="left";
+        ctx2.fillText("→ PROJ",x+4,area.top+10);
+        ctx2.restore();
+      }
+    }]
+  });
+}
+
+/* ────────── SIMS RENDER ────────── */
+function renderSims(){
+  const sim=simulate(scenario);
+  const ddPct=sim.results.filter(r=>{const p=r.matchup.split(" v ");return!p.includes("Hilton")&&!p.includes("Bianco")}).reduce((s,r)=>s+r.pct,0);
+  const drPct=100-ddPct;
+
+  const blue=getComputedStyle(document.documentElement).getPropertyValue("--blue").trim();
+  const red=getComputedStyle(document.documentElement).getPropertyValue("--red").trim();
+
+  document.getElementById("summaryPills").innerHTML=`
+    <div class="summary-pill"><div class="lbl" style="color:${blue}">D–D</div><div class="val" style="color:${blue}">${ddPct.toFixed(1)}%</div></div>
+    <div class="summary-pill"><div class="lbl" style="color:${red}">D–R</div><div class="val" style="color:${red}">${drPct.toFixed(1)}%</div></div>
+  `;
+
+  let barsHtml="";
+  sim.results.slice(0,6).forEach(r=>{
+    const names=r.matchup.split(" v ");
+    const hasR=names.includes("Hilton")||names.includes("Bianco");
+    const fillColor = hasR ? `${COLORS.Hilton}33` : `${COLORS.Swalwell}33`;
+    const fillBorder = hasR ? COLORS.Hilton : COLORS.Swalwell;
+    const pctInside=r.pct>12;
+    barsHtml+=`<div class="bar-row">
+      <div class="bar-names">
+        <span class="dot" style="background:${COLORS[names[0]]}"></span>${names[0].slice(0,3).toUpperCase()}
+        <span class="v">v</span>
+        <span class="dot" style="background:${COLORS[names[1]]}"></span>${names[1].slice(0,3).toUpperCase()}
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${Math.max(r.pct,1)}%;background:${fillColor};border-right:1px solid ${fillBorder}">
+          ${pctInside?`<span class="bar-pct">${r.pct.toFixed(1)}%</span>`:""}
+        </div>
+        ${!pctInside?`<span class="bar-pct-out" style="left:calc(${r.pct}% + 6px)">${r.pct.toFixed(1)}%</span>`:""}
+      </div>
+    </div>`;
+  });
+  document.getElementById("matchupBars").innerHTML=barsHtml;
+
+  let gridHtml="";
+  sim.topWins.forEach(({c,pct})=>{
+    const isR=c==="Hilton"||c==="Bianco";
+    const col=isR?red:blue;
+    gridHtml+=`<div class="top2-card">
+      <div class="lbl" style="color:${col}">${c.slice(0,4)}</div>
+      <div class="num" style="color:${col}">${pct.toFixed(0)}%</div>
+    </div>`;
+  });
+  document.getElementById("top2Grid").innerHTML=gridHtml;
+
+  // Winner probability: for each candidate, sum over matchups × P(win that general)
+  // D beats R at 95% in CA; D vs D is 50/50
+  const winProb={};
+  sim.pool.forEach(c=>{winProb[c]=0});
+  sim.results.forEach(r=>{
+    const [a,b]=r.matchup.split(" v ");
+    const aIsR=a==="Hilton"||a==="Bianco";
+    const bIsR=b==="Hilton"||b==="Bianco";
+    const p=r.pct/100;
+    if(aIsR&&bIsR){
+      winProb[a]+=p*0.5; winProb[b]+=p*0.5;
+    } else if(!aIsR&&!bIsR){
+      winProb[a]+=p*0.5; winProb[b]+=p*0.5;
+    } else {
+      const d=aIsR?b:a, rp=aIsR?a:b;
+      winProb[d]+=p*0.95; winProb[rp]+=p*0.05;
+    }
+  });
+  let winHtml="";
+  Object.entries(winProb).sort((a,b)=>b[1]-a[1]).forEach(([c,p])=>{
+    const isR=c==="Hilton"||c==="Bianco";
+    const col=isR?red:blue;
+    winHtml+=`<div class="top2-card">
+      <div class="lbl" style="color:${col}">${c.slice(0,4)}</div>
+      <div class="num" style="color:${col}">${(p*100).toFixed(0)}%</div>
+    </div>`;
+  });
+  document.getElementById("winGrid").innerHTML=winHtml;
+}
+
+/* ────────── SCENARIO ────────── */
+function setScenario(s){
+  scenario=s;
+  document.getElementById("pillBase").className=s==="base"?"scenario-pill on":"scenario-pill";
+  document.getElementById("pillDrop").className=s==="drop"?"scenario-pill on":"scenario-pill";
+  document.getElementById("scenarioDesc").innerHTML=s==="drop"
+    ? '<span style="color:var(--red);font-weight:800">Swalwell drops out</span> — vote redistributes'
+    : 'Baseline — Trump endorsed Hilton';
+  buildLegend(s);
+  buildChart();
+  renderSims();
+}
+
+/* ────────── THEME TOGGLES ────────── */
+(function(){
+  const root=document.documentElement;
+  const lookBtn=document.getElementById("lookToggle");
+  const themeBtn=document.getElementById("themeToggle");
+  const savedLook=localStorage.getItem("theo-look")||"riso";
+  const savedTheme=localStorage.getItem("theo-theme")||"light";
+  root.setAttribute("data-look",savedLook);
+  root.setAttribute("data-theme",savedTheme);
+  themeBtn.textContent=savedTheme==="dark"?"☾":"☀";
+  themeBtn.classList.toggle("active",savedTheme==="dark");
+  function refreshLookBtn(){
+    const look=root.getAttribute("data-look");
+    lookBtn.classList.toggle("active",look==="legacy");
+  }
+  refreshLookBtn();
+  lookBtn.addEventListener("click",()=>{
+    const next=root.getAttribute("data-look")==="riso"?"legacy":"riso";
+    root.setAttribute("data-look",next);
+    localStorage.setItem("theo-look",next);
+    refreshLookBtn();
+    if(chart){buildChart();renderSims();}
+  });
+  themeBtn.addEventListener("click",()=>{
+    const next=root.getAttribute("data-theme")==="light"?"dark":"light";
+    root.setAttribute("data-theme",next);
+    localStorage.setItem("theo-theme",next);
+    themeBtn.textContent=next==="dark"?"☾":"☀";
+    themeBtn.classList.toggle("active",next==="dark");
+    if(chart){buildChart();renderSims();}
+  });
+})();
+
+/* INIT */
+buildLegend("base");
+buildChart();
+renderSims();
+</script>
+</body>
+</html>
